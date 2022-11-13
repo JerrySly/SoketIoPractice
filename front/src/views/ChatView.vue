@@ -4,7 +4,7 @@
     <div class="chat-wrapper">
       <div class="chat">
         <div class="message" v-for="(message,index) in messages" :key="index">
-          <div>{{message.id+':'}}</div>
+          <div :style="{'color':message.color}">{{message.nick+':'}}</div>
           <div>{{message.value}}</div>
         </div>
       </div>
@@ -12,57 +12,58 @@
     <div class="input-block">
         <input v-model="inputMessage" placeholder="Your message" type="text">
         <button @click="send">Send</button>
-      </div>
+    </div>
+    <select-name-dialog @close="socketCreated" v-model="dialog"></select-name-dialog>
   </div>
 </template>
 
 <script>
-// @ is an alias to /src
+import { mapState } from 'vuex';
+import SelectNameDialog from '../components/SelectNameDialog.vue';
 
 export default {
-  name: "HomeView",
+  components: { SelectNameDialog },
+  name: "ChatView",
   data() {
     return {
       inputMessage: null,
-      messages: [
-        {
-          id: "12412412414",
-          value: "Hello1111",
-        },
-        {
-          id: "12412412414",
-          value: "Hello",
-        },
-        {
-          id: "12412412414",
-          value: "Hello",
-        },
-        {
-          id: "12412512332",
-          value: "And you",
-        },
-      ],
+      messages: [],
+      dialog: true
     };
   },
   mounted(){
-    this.$socket.on('new-message', this.addNew)
   },
   methods:{
+    socketCreated(){
+      this.dialog = false;
+      this.socket.on('new-message', this.addNew)
+    },  
     addNew(msgObject){
       this.messages.push({
-        id: msgObject.id,
-        value: msgObject.message
+        nick: msgObject.nick,
+        value: msgObject.message,
+        color: msgObject.color
       })
     },
     send(){
-      this.$socket.emit('send',{message:this.inputMessage, id: this.$socket.id});
-      this.addNew({message:this.inputMessage, id: this.$socket.id})
+      let messageObj = {message:this.inputMessage, nick: this.nickConfig.nick, color:this.nickConfig.color}
+      this.socket.emit('send',messageObj);
+      this.addNew(messageObj)
       this.inputMessage = null;
     }
+  },
+  computed:{
+    ...mapState({
+      socket: state => state.socket,
+      nickConfig: state => state.nickConfig
+    })
   }
 };
 </script>
 <style scoped>
+.home{
+  position: relative;
+}
 .message{
   display: flex;
   margin-left: 20px;
@@ -83,6 +84,7 @@ export default {
   height: 700px;
   width: 500px;
   border: 1px solid black;
+  overflow-y: scroll;
 }
 .input-block{
   display: flex;
