@@ -37,7 +37,18 @@ export default {
     socketCreated(){
       this.dialog = false;
       this.socket.on('new-message', this.addNew)
-    },  
+      this.socket.on('new-connection', this.newMember)
+    },
+    newMember(nickConfig){
+      this.addSystemMessage(`New member: ${nickConfig.nick} `)
+    },
+    addSystemMessage(text){
+      this.addNew({
+        nick: 'MESSENGER-SYSTEM',
+        color: '#000',
+        message: text
+      })
+    } , 
     addNew(msgObject){
       this.messages.push({
         nick: msgObject.nick,

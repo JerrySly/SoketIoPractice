@@ -44,11 +44,15 @@ export default {
       this.color = eventData.cssColor;
     },
     createNick(){
-        this.setSocket(io('http://localhost:3000'));
-        this.setNick({
+        const socket = io('http://localhost:3000');
+        this.setSocket(socket);
+        const nickConfig = {
             color: this.color,
             nick: this.nick
-        })
+        }
+        this.setNick(nickConfig)
+
+        socket.emit('connection-message', nickConfig)
         this.close()
     }
   },

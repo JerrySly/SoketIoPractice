@@ -23,10 +23,13 @@ app.get('/', (req,res)=>{
 
 io.on('connection', (socket) => {
     console.log('User connected')
-    socket.broadcast.emit('somebody-connected');
     socket.on('send', (msgObject)=>{
         console.log('msg: ',msgObject)
         socket.broadcast.emit('new-message', msgObject)
+    })
+    socket.on('connection-message', (nickConfig) => {
+        socket.broadcast.emit('new-connection', nickConfig)
+
     })
 })
 
