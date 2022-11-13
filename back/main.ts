@@ -13,7 +13,7 @@ const io = new Server(server,{
 });
 
 const cors = require('cors')
-
+let currentTyping:Array<{nickConfig:{nick:string,color:string},id: string}> = []
 
 app.use(cors())
 
@@ -31,6 +31,24 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('new-connection', nickConfig)
 
     })
+    socket.on('typing-text', (nickConfig) => {
+        console.log({
+            nickConfig,
+            id:socket.id
+        })
+        if(currentTyping.filter(x=>x.id == socket.id).length == 0)
+        currentTyping.push({
+            nickConfig,
+            id:socket.id
+        })
+        socket.broadcast.emit('somebody-typing',currentTyping)
+    })
+
+    socket.on('end-typing', () => {
+        currentTyping = currentTyping.filter(x=>x.id != socket.id);
+        socket.broadcast.emit('somebody-typing',currentTyping)
+    })
+
 })
 
 

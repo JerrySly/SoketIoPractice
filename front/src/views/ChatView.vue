@@ -10,10 +10,15 @@
       </div>
     </div>
     <div class="input-block">
-        <input v-model="inputMessage" placeholder="Your message" type="text">
+        <input v-model="inputMessage" @input="typing" placeholder="Your message" type="text">
         <button @click="send">Send</button>
     </div>
     <select-name-dialog @close="socketCreated" v-model="dialog"></select-name-dialog>
+    <div class="typing-users-block">
+      <div class="head">Typing users</div>
+      <div v-for="(user,index) in typingUsers" :key="index" :style="{'color':user.color}">
+      {{user.nick}}</div>
+    </div>
   </div>
 </template>
 
@@ -28,16 +33,24 @@ export default {
     return {
       inputMessage: null,
       messages: [],
-      dialog: true
+      dialog: true,
+      typingUsers: []
     };
   },
   mounted(){
   },
   methods:{
+    typing(){
+      this.socket.emit('typing-text',this.nickConfig)
+    },
     socketCreated(){
       this.dialog = false;
       this.socket.on('new-message', this.addNew)
       this.socket.on('new-connection', this.newMember)
+      this.socket.on('somebody-typing',this.setTyping)
+    },
+    setTyping(usersTyping){
+      this.typingUsers = usersTyping.map(x=>x.nickConfig)
     },
     newMember(nickConfig){
       this.addSystemMessage(`New member: ${nickConfig.nick} `)
@@ -61,6 +74,7 @@ export default {
       this.socket.emit('send',messageObj);
       this.addNew(messageObj)
       this.inputMessage = null;
+      this.socket.emit('end-typing')
     }
   },
   computed:{
@@ -72,6 +86,13 @@ export default {
 };
 </script>
 <style scoped>
+.typing-users-block{
+  font-size: 20px;
+}
+.typing-users-block{
+  position: absolute;
+  top: 300px;
+}
 .home{
   position: relative;
 }
